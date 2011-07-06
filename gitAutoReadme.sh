@@ -2,6 +2,7 @@
 
 # Usage info
 USAGE="
+BEGIN README
 gitAutoReadme.sh
 ================
 
@@ -10,7 +11,7 @@ source files into your README file.
 
 Usage TODO.
 
-END USAGE
+END README
 "
 
 # Defaults
@@ -66,41 +67,41 @@ function install {
 
     # TOPSENTINEL
     echo
-    echo "Enter a \"top sentinal\", which source files will use to mark the"
+    echo "Enter a \"top sentinel\", which source files will use to mark the"
     echo "beginning of text to be included in the README. You can add more top"
-    echo "sentinals later with \"git config --add autoreadme.topsentinal\"."
+    echo "sentinels later with \"git config --add autoreadme.topsentinel\"."
     echo "[BEGIN README]"
-    read -e TOPSENTINAL
-    if [ -z "$TOPSENTINAL" ]; then
-        TOPSENTINAL="BEGIN README"
+    read -e TOPSENTINEL
+    if [ -z "$TOPSENTINEL" ]; then
+        TOPSENTINEL="BEGIN README"
     fi
-    #echo "TOP SENTINAL:"
+    #echo "TOP SENTINEL:"
     #echo -ne "\t"
-    #echo "$TOPSENTINAL"
+    #echo "$TOPSENTINEL"
 
     # BOTTOMSENTINEL
     echo
-    echo "Enter a \"bottom sentinal\", which source files will use to mark the"
+    echo "Enter a \"bottom sentinel\", which source files will use to mark the"
     echo "end of text to be included in the README. You can add more bottom"
-    echo "sentinals later with \"git config --add autoreadme.bottomsentinal\"."
+    echo "sentinels later with \"git config --add autoreadme.bottomsentinel\"."
     echo "[END README]"
-    read -e BOTTOMSENTINAL
-    if [ -z "$BOTTOMSENTINAL" ]; then
-        BOTTOMSENTINAL="END README"
+    read -e BOTTOMSENTINEL
+    if [ -z "$BOTTOMSENTINEL" ]; then
+        BOTTOMSENTINEL="END README"
     fi
-    #echo "BOTTOM SENTINAL:"
+    #echo "BOTTOM SENTINEL:"
     #echo -ne "\t"
-    #echo "$BOTTOMSENTINAL"
+    #echo "$BOTTOMSENTINEL"
 
-    # INCLUDESENTINALS
+    # INCLUDESENTINELS
     echo
-    echo "Should the sentinals themselves be included in the README? [n]"
-    while [ "$INCLUDESENTINALS" != "y" -a "$INCLUDESENTINALS" != "n" ]; do
+    echo "Should the sentinels themselves be included in the README? [n]"
+    while [ "$INCLUDESENTINELS" != "y" -a "$INCLUDESENTINELS" != "n" ]; do
         echo -n "Enter \"y\" or \"n\": "
-        read -n 1 INCLUDESENTINALS
+        read -n 1 INCLUDESENTINELS
         echo
-        if [ -z "$INCLUDESENTINALS" ]; then
-            INCLUDESENTINALS="n"
+        if [ -z "$INCLUDESENTINELS" ]; then
+            INCLUDESENTINELS="n"
         fi
     done
 
@@ -126,26 +127,67 @@ function install {
     echo "Press enter to install, or CTRL-C to cancel."
     read
 
+    # copy or link us into the destination hooks dir
     if [ "$COPYORLINK" = "c" ]; then
         cp "$0" "${GITROOT}/.git/hooks"
     elif [ "$COPYORLINK" = "l" ]; then
-        ln -sf "$0" "${GITROOT}/.git/hooks"
+        ln -sf "$(pwd)/$0" "${GITROOT}/.git/hooks"
     fi
+
+    addedByLine="# Added by gitAutoReadme.sh interactive installation:"
+    sourceLine="source .git/hooks/gitAutoReadme.sh"
+    sourceLineRegex="$(echo ${sourceLine} | sed "s/\./\\\./")"
+    precommit="${GITROOT}/.git/hooks/pre-commit"
+    # if the hooks/pre-commit script already exists, add a line sourcing our
+    # copy/link
+    if [ -f "${precommit}" ]; then
+        grepout="$(grep "${sourceLineRegex}" ${precommit})"
+        if [ -z "$grepout" ]; then
+            echo "$addedByLine" >> "${precommit}"
+            echo "$sourceLine" >> "${precommit}"
+        fi
+    else
+        # otherwise create it
+        echo "#!/bin/bash" > "${precommit}"
+        echo "$addedByLine" >> "${precommit}"
+        echo "$sourceLine" >> "${precommit}"
+    fi
+    # make sure the pre-commit script is executable
+    chmod 755 "${precommit}"
+
+    # setup git config options used by gitAutoReadme
+    git config autoreadme.readme "${README}"
+    git config autoreadme.sourceglob "${SOURCEGLOB}"
+    git config autoreadme.topsentinel "${TOPSENTINEL}"
+    git config autoreadme.bottomsentinel "${BOTTOMSENTINEL}"
+    if [ "$INCLUDESENTINELS" = "y" ]; then
+        INCLUDESENTINELS="true"
+    else
+        INCLUDESENTINELS="false"
+    fi
+    git config autoreadme.includesentinels "${INCLUDESENTINELS}"
+
 }
 
 # Check for options
 while getopts ":hi" opt; do
     case $opt in
-        h) echo "$USAGE"; exit 0;;
+        h) echo "$USAGE" | head -n -2 | tail -n +3; 
+            exit 0;;
         i) install; exit 0;;
         \?) echo "$0: Unknown option: -$OPTARG" >&2;
             exit 1;;
     esac
 done
 
+### From here on down: assume we've been exec'd as part of the pre-commit hook
 
 # Name of the README file
 README="$(git config autoreadme.readme)"
+SOURCEGLOB="$(git config autoreadme.sourceglob)"
+TOPSENTINEL="$(git config autoreadme.topsentinel)"
+BOTTOMSENTINEL="$(git config autoreadme.bottomsentinel)"
+INCLUDESENTINELS="$(git config autoreadme.includesentinels)"
 
 if [ -z $README ]; then
     echo "$0: No README filename specified (git config autoreadme.readme)."
