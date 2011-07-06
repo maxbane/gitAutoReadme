@@ -135,7 +135,7 @@ function install {
     fi
 
     addedByLine="# Added by gitAutoReadme.sh interactive installation:"
-    sourceLine="source .git/hooks/gitAutoReadme.sh"
+    sourceLine="exec .git/hooks/gitAutoReadme.sh"
     sourceLineRegex="$(echo ${sourceLine} | sed "s/\./\\\./")"
     precommit="${GITROOT}/.git/hooks/pre-commit"
     # if the hooks/pre-commit script already exists, add a line sourcing our
