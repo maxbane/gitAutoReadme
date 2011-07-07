@@ -83,7 +83,7 @@ Once ``gitAutoReadme`` is installed on your project's working copy and
 configured to your liking, simply make commits as normal! ``gitAutoReadme`` will
 print a line for each sentinel that it searches for, indicating whether or not
 it was found in any source file. For example, here's what it looks like when
-making commit to ``gitAutoReadme``'s own repository:
+making a commit to ``gitAutoReadme``'s own repository:
 
     $ git commit -am 'More docs, tweaks.'
     gitAutoReadme: ^OVERVIEW=\"$ ... ^\"$ > README.md
@@ -279,12 +279,12 @@ The exceptions are:
     This process is interactive in the terminal, and is described in the
     _Installation_ section of the documentation.
 
-  - Uninstalling gitAutoReadme from a working copy: 
+  - Uninstalling ``gitAutoReadme`` from a working copy: 
 
         ./gitAutoReadme.sh -u /path/to/working/copy
 
     This will remove the ``gitAutoReadme.sh`` link/copy in the given working
-    copy's ``.git/hooks'' directory, and remove the ``[autoreadme]`` section
+    copy's ``.git/hooks`` directory, and remove the ``[autoreadme]`` section
     from its ``.git/config`` file.
 
   - Manually running gitAutoReadme to generate the resulting ``README`` file
