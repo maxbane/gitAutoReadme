@@ -48,6 +48,23 @@ Configuration
 
     TODO
 
+Usage
+-----
+
+Once ``gitAutoReadme`` is installed on your project's working copy and
+configured to your liking, simply make commits as normal! ``gitAutoReadme`` will
+print a line for each sentinel that it searches for, indicating whether or not
+it was found in any source file. For example, here's what it looks like when
+making commit to ``gitAutoReadme``'s own repository:
+
+    $ git commit -am 'More docs, tweaks.'
+    gitAutoReadme: ^OVERVIEW=\"$ ... ^\"$ > README.md
+    gitAutoReadme: ^USAGE=\"$ ... ^\"$ > README.md
+    gitAutoReadme: ^LICENSE='$ ... ^'$ > README.md
+    [master f20d76e] More docs, tweaks.
+     2 files changed, 208 insertions(+), 15 deletions(-)
+    
+
 Alternatives
 ------------
 
