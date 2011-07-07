@@ -1,7 +1,7 @@
 gitAutoReadme
 =============
 
-    Version 0.1.0
+    Version 0.1.1
 
 A git pre-commit hook script that automagically extracts documentation from your
 source files into your ``README`` file. This ``README`` file itself was
