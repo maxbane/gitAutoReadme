@@ -8,7 +8,7 @@
 #   	sourceglob = *.sh
 #       topsentinel = ^OVERVIEW=\"$
 #   	bottomsentinel = ^\"$
-#       topsentinel = ^USAGE=\"$
+#       topsentinel = ^INVOCATION=\"$
 #   	bottomsentinel = ^\"$
 #       topsentinel = ^LICENSE='$
 #   	bottomsentinel = ^'$
@@ -32,7 +32,8 @@ gitAutoReadme
     Version 0.1.0-dev
 
 A git pre-commit hook script that automagically extracts documentation from your
-source files into your ``README`` file.
+source files into your ``README`` file. This ``README`` file itself was
+generated from the ``gitAutoReadme.sh`` script, and serves as a working example. 
 
 How it works
 ------------
@@ -74,7 +75,58 @@ down from upstream, will immediately take effect.
 Configuration
 -------------
 
-    TODO
+After running the interactive installation, you will find a new ``[autoreadme]``
+section in your ``.git/config`` file. It might look like this (depending on what
+you entered during the installation):
+
+    [autoreadme]
+        readme = README.md
+        sourceglob = *.c
+        topsentinel = ^BEGIN README$
+        bottomsentinel = ^END README$
+        includesentinels = false
+
+You can change these configuration options either by editing the config file
+directly, or by using the ``git config`` commad. For example, if you want to add
+``*.py`` to the set of source files that get searched for ``README`` content,
+you can do this:
+
+    $ git config --add autoreadme.sourceglob '*.py'
+
+And the resulting config file will look like this:
+
+    [autoreadme]
+        readme = README.md
+        sourceglob = *.c
+        topsentinel = ^BEGIN README$
+        bottomsentinel = ^END README$
+        includesentinels = false
+        sourceglob = *.py
+
+The meanings of the options are as follows:
+
+  - ``autoreadme.readme``: The name of the ``README`` file to generate.
+
+  - ``autoreadme.sourceglob``: Each ``sourceglob`` line adds a set of files
+  to be searched for sentinels. You can enter anything here that ``bash``'s glob
+  or brace expansion will turn into a list of files, relative to the top of your
+  working copy.
+
+  - ``autoreadme.topsentinel`` and ``autoreadme.bottomsentinel``: These
+  lines must always come in pairs, and the first ``topsentinel`` line in the
+  config file is associated with the first ``bottomsentinel`` line, the sencond
+  ``topsentinel`` with the second ``bottomsentinel``, and so on. Each pair uses
+  ``sed``-style regular expressions to describe which lines of a source file
+  should be matched as top and bottom sentinels. Everything between a pair of
+  associated top/bottom-sentinel lines is extracted and placed in the ``README``
+  file upon a commit. Sentinels are searched for, and any matching text
+  extracted, _in the order in which they appear in the config file_. You can
+  therefore use different top/bottom-sentinel pairs, arranged in a particular
+  order, to put text from all over your source files into your ``README`` in
+  whatever order you like.
+
+  - ``includesentinels``: If ``true``, the sentinel lines themselves (in
+  addition to the text between them) will be included in the ``README``.
 
 Usage
 -----
@@ -91,14 +143,44 @@ making a commit to ``gitAutoReadme``'s own repository:
     gitAutoReadme: ^LICENSE='$ ... ^'$ > README.md
     [master f20d76e] More docs, tweaks.
      2 files changed, 208 insertions(+), 15 deletions(-)
+
+``gitAutoReadme`` clears your ``README`` file before populating it on each
+commit, but first it makes a copy of the existing ``README`` with the ``.old``
+suffix..
     
 You can manually bypass all pre-commit hooks, including ``gitAutoReadme``, by
 using the ``--no-verify`` option of ``git commit.``
 
+
 Alternatives
 ------------
 
-    TODO
+Many programming languages provide mechanisms for self-documenting source code,
+e.g., Java's javadoc comments, and Python's doc strings. There are also many
+tools, like Epydoc, for extracting such documentation from source and producing
+full API docs. The design goals of ``gitAutoReadme`` differ from these in
+several ways:
+
+  - The focus is on generating a ``README`` file rather than full API docs,
+    though you certainly could use ``gitAutoReadme`` to include all of your API
+    documentation in the ``README``, if you wanted to.
+
+  - It is completely language-neutral and markup-neutral. It can be used to
+    include not just comment strings, but any kind of text from your source
+    files, including snippets of live code.
+
+  - It integrates seamlessly into your ``git``-based workflow, and is perfect
+    for keeping the ``README`` displayed on your project's github page always
+    current. You could even add some more pre-commit hooks of your own, which
+    together with ``gitAutoReadme`` might do some pretty complicated
+    programmatic ``README``-generation.
+
+``gitAutoReadme`` is also related to so-called _literate programming_ tools like
+Sweave, which are generally much more complicated and powerful.
+``gitAutoReadme`` offers simplicity, and takes a complementary approach: you
+embed your documentation in your code, rather than embedding your code in your
+documentation.
+
 "
 
 # Defaults
@@ -262,8 +344,8 @@ function uninstall {
     git config --remove-section autoreadme
 }
 
-# Usage info used by -h
-USAGE="
+# Invocation info used by -h
+INVOCATION="
 
 Invocation
 ----------
@@ -302,7 +384,7 @@ The exceptions are:
 # Check for options
 while getopts ":hiu:" opt; do
     case $opt in
-        h) echo "$USAGE" | head -n -2 | tail -n +2; 
+        h) echo "$INVOCATION" | head -n -2 | tail -n +2; 
             exit 0;;
         i) install; exit 0;;
         u) uninstall $OPTARG; exit 0;;
