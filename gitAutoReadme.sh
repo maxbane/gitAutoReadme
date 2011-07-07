@@ -385,7 +385,7 @@ The exceptions are:
 # Check for options
 while getopts ":hiu:" opt; do
     case $opt in
-        h) echo "$INVOCATION" | head -n -2 | tail -n +2; 
+        h) echo "$INVOCATION" | sed -e "1,2d"
             exit 0;;
         i) install; exit 0;;
         u) uninstall $OPTARG; exit 0;;
