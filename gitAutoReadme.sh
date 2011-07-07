@@ -372,4 +372,6 @@ while (($i < ${#tops[*]})); do
     ((i++))
 done
 
+git add "$README"
+
 exit 0
