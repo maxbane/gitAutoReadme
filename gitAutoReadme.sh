@@ -52,6 +52,12 @@ definition and ordering of your sentinels, you can arrange for the contents of
 the ``README`` file to be collected from many scattered parts of different
 source files. It's all about the self-documenting source code, baby!
 
+Prerequisities
+--------------
+
+Besides ``git``, ``gitAutoReadme`` only depends on a few standard Unix tools
+being available: ``bash``, ``cp``, ``ln``, and ``sed``.
+
 Installation
 ------------
 
