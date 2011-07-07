@@ -181,7 +181,7 @@ The exceptions are:
     without peforming a commit (this must be done from the top of your working
     copy):
 
-        ./gitAutoReadme.sh
+        ./.git/hooks/gitAutoReadme.sh
 
   - Finally, invoking ``./gitAutoReadme.sh -h`` prints this _Invocation_ section
     of the documention to standard out and exits.
