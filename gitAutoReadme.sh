@@ -249,3 +249,4 @@ while (($i < ${#tops[*]})); do
     ((i++))
 done
 
+exit 0
