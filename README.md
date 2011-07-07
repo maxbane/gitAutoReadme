@@ -104,7 +104,7 @@ Usage
 -----
 
 Once ``gitAutoReadme`` is installed on your project's working copy and
-configured to your liking, simply make commits as normal! ``gitAutoReadme`` will
+configured to your liking, simply make commits as normal. ``gitAutoReadme`` will
 print a line for each sentinel that it searches for, indicating whether or not
 it was found in any source file. For example, here's what it looks like when
 making a commit to ``gitAutoReadme``'s own repository:
@@ -162,7 +162,7 @@ Once installed to your working copy of a repository, you normally don't need to
 invoke ``gitAutoReadme.sh`` itself, as that will be handled by a pre-commit hook.
 The exceptions are:
 
-  - Initially installing gitAutoReadme on a working copy: 
+  - Initially installing ``gitAutoReadme`` on a working copy: 
 
         ./gitAutoReadme.sh -i
 
@@ -177,8 +177,9 @@ The exceptions are:
     copy's ``.git/hooks`` directory, and remove the ``[autoreadme]`` section
     from its ``.git/config`` file.
 
-  - Manually running gitAutoReadme to generate the resulting ``README`` file
-    without peforming a commit:
+  - Manually running ``gitAutoReadme`` to generate the resulting ``README`` file
+    without peforming a commit (this must be done from the top of your working
+    copy):
 
         ./gitAutoReadme.sh
 
