@@ -64,6 +64,8 @@ making a commit to ``gitAutoReadme``'s own repository:
     [master f20d76e] More docs, tweaks.
      2 files changed, 208 insertions(+), 15 deletions(-)
     
+You can manually bypass all pre-commit hooks, including ``gitAutoReadme``, by
+using the ``--no-verify`` option of ``git commit.``
 
 Alternatives
 ------------
