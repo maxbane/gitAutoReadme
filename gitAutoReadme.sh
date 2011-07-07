@@ -1,18 +1,18 @@
 #!/bin/bash
 
 # Usage info
-USAGE="
+USAGE='
 BEGIN README
 gitAutoReadme.sh
 ================
 
 A git pre-commit hook script that automagically extracts documentation from your
-source files into your README file.
+source files into your `README` file.
 
 Usage TODO.
 
 END README
-"
+'
 
 # Defaults
 DEFAULT_README="README"
@@ -70,10 +70,10 @@ function install {
     echo "Enter a \"top sentinel\", which source files will use to mark the"
     echo "beginning of text to be included in the README. You can add more top"
     echo "sentinels later with \"git config --add autoreadme.topsentinel\"."
-    echo "[BEGIN README]"
+    echo "[^BEGIN README$]"
     read -e TOPSENTINEL
     if [ -z "$TOPSENTINEL" ]; then
-        TOPSENTINEL="BEGIN README"
+        TOPSENTINEL="^BEGIN README$"
     fi
     #echo "TOP SENTINEL:"
     #echo -ne "\t"
@@ -84,10 +84,10 @@ function install {
     echo "Enter a \"bottom sentinel\", which source files will use to mark the"
     echo "end of text to be included in the README. You can add more bottom"
     echo "sentinels later with \"git config --add autoreadme.bottomsentinel\"."
-    echo "[END README]"
+    echo "[^END README$]"
     read -e BOTTOMSENTINEL
     if [ -z "$BOTTOMSENTINEL" ]; then
-        BOTTOMSENTINEL="END README"
+        BOTTOMSENTINEL="^END README$"
     fi
     #echo "BOTTOM SENTINEL:"
     #echo -ne "\t"
@@ -95,7 +95,7 @@ function install {
 
     # INCLUDESENTINELS
     echo
-    echo "Should the sentinels themselves be included in the README? [n]"
+    echo "Should the sentinels lines themselves be included in the README? [n]"
     while [ "$INCLUDESENTINELS" != "y" -a "$INCLUDESENTINELS" != "n" ]; do
         echo -n "Enter \"y\" or \"n\": "
         read -n 1 INCLUDESENTINELS
@@ -169,12 +169,18 @@ function install {
 
 }
 
+function uninstall {
+    rm -f $1/.git/hooks/gitAutoReadme.sh
+    git config --remove-section autoreadme
+}
+
 # Check for options
-while getopts ":hi" opt; do
+while getopts ":hiu:" opt; do
     case $opt in
         h) echo "$USAGE" | head -n -2 | tail -n +3; 
             exit 0;;
         i) install; exit 0;;
+        u) uninstall $OPTARG; exit 0;;
         \?) echo "$0: Unknown option: -$OPTARG" >&2;
             exit 1;;
     esac
@@ -182,19 +188,64 @@ done
 
 ### From here on down: assume we've been exec'd as part of the pre-commit hook
 
+ME="gitAutoReadme"
+
 # Name of the README file
 README="$(git config autoreadme.readme)"
-SOURCEGLOB="$(git config autoreadme.sourceglob)"
-TOPSENTINEL="$(git config autoreadme.topsentinel)"
-BOTTOMSENTINEL="$(git config autoreadme.bottomsentinel)"
+SOURCEGLOBS="$(git config --get-all autoreadme.sourceglob)"
+TOPSENTINELS="$(git config --get-all autoreadme.topsentinel)"
+BOTTOMSENTINELS="$(git config --get-all autoreadme.bottomsentinel)"
 INCLUDESENTINELS="$(git config autoreadme.includesentinels)"
 
+if [ -z "$SOURCEGLOBS" ]; then
+    echo "$ME: Error: No source globs specified in config!"
+    exit 1;
+fi
+
+if [ -z "$TOPSENTINELS" ]; then
+    echo "$ME: Error: No top sentinels specified in config!"
+    exit 1;
+fi
+
+IFS='
+'
+tops=($TOPSENTINELS)
+bots=($BOTTOMSENTINELS)
+unset IFS
+
+if [ ${#tops[*]} != ${#bots[*]} ]; then
+    echo "$ME: Error: Number of top sentinels (${#tops[*]}) does not equal number of"
+    echo "bottom sentinels (${#bots[*]})!"
+    exit 1
+fi
+
 if [ -z $README ]; then
-    echo "$0: No README filename specified (git config autoreadme.readme)."
-    echo "$0: Using default \"$DEFAULT_README\""
+    echo "$ME: No README filename specified (git config autoreadme.readme)."
+    echo "$ME: Using default \"$DEFAULT_README\""
     README="$DEFAULT_README"
 fi
 
-echo "$0: Wrote $README."
+# clear out the readme
+cp "${README}" "${README}.old" 2> /dev/null
+echo -n > "${README}"
 
-#awk '' gitAutoReadme.sh | head -n-1 > README.md
+# main loop; process each sentinel pair in the order listed in .git/config
+i=0
+while (($i < ${#tops[*]})); do
+    top=${tops[$i]}
+    bot=${bots[$i]}
+    text=$(sed -n "/${top}/,/${bot}/p" $SOURCEGLOBS 2> /dev/null)
+    if [ "$INCLUDESENTINELS" != "true" ]; then
+        text=$(echo "$text" | sed -e "/${top}/d" -e "/${bot}/d")
+    fi
+
+    if [ ! -z "$text" ]; then
+        echo "$ME: ${top} ... ${bot} > ${README}"
+        echo "$text" >> "$README"
+    else
+        echo "$ME: Not found: ${top} ... ${bot}"
+    fi
+
+    ((i++))
+done
+
